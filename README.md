@@ -1,117 +1,101 @@
-# Splunk SOC Home Lab
+# Splunk SOC Home Lab — Active Directory Attack Detection
 
-A hands-on Security Operations Center (SOC) home lab using Splunk and virtual machines to practice attack simulation, security monitoring, threat detection, threat hunting, and incident investigation.
+A home lab built to simulate real-world Active Directory attacks and detect them using Splunk. This repo documents the lab setup, each attack scenario executed against the domain, the raw telemetry generated, and the corresponding Splunk detections (SPL queries) mapped to MITRE ATT&CK.
 
-## Overview
+## 🎯 Goal
 
-This project documents practical SOC exercises in two environments:
+Practice both offensive techniques (simulating common AD attacks) and defensive detection engineering (building and tuning Splunk searches/dashboards to catch them) — bridging SOC analyst and red team skill sets in one hands-on project.
 
-- **Attack Simulation:** Generate controlled security events in a virtual lab and investigate them using Splunk.
-- **BOTS v3:** Analyze the Splunk Boss of the SOC Version 3 dataset to practice threat hunting, SPL queries, and security investigations.
+## 🏗️ Lab Architecture
 
-The goal is to develop practical skills in SIEM operations, alert triage, log analysis, and evidence-based incident investigation.
-
-## Objectives
-
-- Configure and use Splunk as a Security Information and Event Management (SIEM) platform.
-- Collect and analyze security logs from virtual machines.
-- Simulate controlled attacks and investigate the resulting events.
-- Develop and test SPL queries for threat detection.
-- Practice threat hunting using the BOTS v3 dataset.
-- Correlate events and document investigation findings.
-- Recommend defensive measures and detection improvements.
-
-## Lab Environment
-
-| Component | Details |
-|---|---|
-| SIEM | Splunk |
-| Infrastructure | Virtual machines |
-| Attack Simulation | Controlled lab exercises |
-| Threat Hunting | BOTS v3 dataset |
-| Log Sources | Depends on the scenario |
-| Investigation Tools | Splunk Search Processing Language (SPL) |
-
-## SOC Workflow
-
-1. **Attack Simulation** — Generate controlled security events in the lab.
-2. **Log Collection** — Verify that relevant telemetry reaches Splunk.
-3. **Threat Detection** — Search for suspicious activity using SPL.
-4. **Alert Triage** — Review event details, timestamps, affected systems, and severity.
-5. **Investigation** — Correlate events and analyze supporting evidence.
-6. **Threat Hunting** — Search available datasets for suspicious behavior and related activity.
-7. **Reporting** — Document findings, conclusions, and recommended actions.
-
-## Repository Structure
-
-```text
-splunk-soc-home-lab/
-├── README.md
-├── attack-scenarios/
-├── investigations/
-│   ├── case-001-brute-force/
-│   ├── case-002-suspicious-powershell/
-│   └── case-003-network-reconnaissance/
-├── botsv3/
-│   ├── README.md
-│   ├── investigations/
-│   └── screenshots/
-├── screenshots/
-├── .gitignore
-└── LICENSE
+```
+┌─────────────────────────────────────────────┐
+│  Attacker (Kali Linux)                       │
+│  - Impacket, Mimikatz, Responder, BloodHound │
+└───────────────────┬───────────────────────────┘
+                     │
+┌────────────────────┴───────────────────────────┐
+│  Windows Server (Domain Controller)             │
+│  - Active Directory Domain Services             │
+│  - Sysmon + Splunk Universal Forwarder           │
+└────────────────────┬───────────────────────────┘
+                     │
+┌────────────────────┴───────────────────────────┐
+│  Windows 10/11 Client (Domain-joined victim)    │
+│  - Sysmon + Splunk Universal Forwarder           │
+└────────────────────┬───────────────────────────┘
+                     │
+┌────────────────────┴───────────────────────────┐
+│  Splunk Enterprise (SOC server)                 │
+│  - Ingests logs, dashboards, detections (SPL)   │
+└─────────────────────────────────────────────────┘
 ```
 
-## 1. Attack Simulation and Investigation
+## 🧱 Lab Components
 
-This section documents controlled attack scenarios performed against authorized lab systems and the subsequent investigations in Splunk.
-
-Planned scenarios include:
-
-| Case | Scenario | Status |
+| Component | Role | Key Tools |
 |---|---|---|
-| 001 | Brute-Force Login Attempt | Planned |
-| 002 | Suspicious PowerShell Activity | Planned |
-| 003 | Network Reconnaissance | Planned |
+| Windows Server 2019/2022 | Domain Controller | Active Directory Domain Services, Sysmon |
+| Windows 10/11 | Domain-joined client | Sysmon, Splunk Universal Forwarder |
+| Kali Linux | Attacker machine | Impacket, Mimikatz, Responder, BloodHound |
+| Splunk Enterprise | SOC / log analysis | Splunk Free/Dev license (500MB/day) |
 
-Each case will document the attack objective, simulation procedure, relevant log sources, SPL queries, investigation findings, verdict, and recommended defensive measures.
+## 📁 Repository Structure
 
-## 2. BOTS v3 — Boss of the SOC
+```
+splunk-soc-ad-homelab/
+├── README.md
+├── lab-setup/
+│   ├── 01-network-topology.md
+│   ├── 02-domain-controller-setup.md
+│   ├── 03-client-setup.md
+│   ├── 04-splunk-install-config.md
+│   └── 05-sysmon-config.md
+├── attacks/
+│   ├── 01-kerberoasting/
+│   ├── 02-pass-the-hash/
+│   ├── 03-asrep-roasting/
+│   ├── 04-dcsync/
+│   ├── 05-golden-ticket/
+│   ├── 06-llmnr-poisoning/
+│   └── 07-bloodhound-enum/
+├── detections/
+│   └── splunk-detection-rules.md
+└── dashboards/
+    └── soc-overview-dashboard.json
+```
 
-BOTS v3 is a Splunk security investigation dataset used to practice threat hunting and security analysis.
+Each attack folder follows the same format:
+**Objective → Attack Steps → Raw Log Sample → Detection Logic (SPL) → Dashboard/Alert Screenshot → MITRE ATT&CK Mapping**
 
-This section will document investigations using the available dataset, including:
+## 🗺️ Attack Scenarios Covered
 
-- Exploring security events and data sources.
-- Identifying relevant indexes and sourcetypes.
-- Developing SPL queries to investigate suspicious activity.
-- Correlating events and examining potential indicators of compromise.
-- Documenting findings and evidence-based conclusions.
+| # | Attack | MITRE ATT&CK | Status |
+|---|---|---|---|
+| 1 | Kerberoasting | T1558.003 | ⬜ Planned |
+| 2 | Pass-the-Hash | T1550.002 | ⬜ Planned |
+| 3 | AS-REP Roasting | T1558.004 | ⬜ Planned |
+| 4 | DCSync Attack | T1003.006 | ⬜ Planned |
+| 5 | Golden Ticket | T1558.001 | ⬜ Planned |
+| 6 | LLMNR/NBT-NS Poisoning | T1557.001 | ⬜ Planned |
+| 7 | BloodHound Enumeration | T1087 / T1482 | ⬜ Planned |
 
-**Official dataset:** [Splunk BOTS v3 on GitHub](https://github.com/splunk/botsv3)
+## 🛠️ Tech Stack
 
-Setup instructions, investigation reports, SPL queries, and selected screenshots will be maintained in the [`botsv3/`](botsv3/) directory.
+- **Hypervisor:** VMware Workstation / VirtualBox / Proxmox
+- **SIEM:** Splunk Enterprise (Free/Dev license)
+- **Telemetry:** Sysmon + Windows Event Logs + Splunk Universal Forwarder
+- **Attack Tooling:** Impacket, Mimikatz, Responder, BloodHound, Hashcat
 
-## Investigation Methodology
+## ⚠️ Disclaimer
 
-Each investigation will include:
+All attacks and techniques documented in this repository were performed exclusively in an **isolated, self-owned home lab environment**. Nothing here was run against any system without explicit authorization. This repo is for educational and defensive security research purposes only.
 
-- **Overview:** Scenario, objective, and environment.
-- **Evidence Collection:** Relevant logs, events, timestamps, and affected systems.
-- **Analysis:** SPL queries and investigation steps.
-- **Findings:** Observed activity and supporting evidence.
-- **Verdict:** Assessment based on the available evidence.
-- **Recommendations:** Appropriate detection, containment, or remediation measures.
+## 🔎 About
 
-## Evidence and Documentation
+- GitHub: [@a7meda1s1dd1g](https://github.com/a7meda1s1dd1g)
+- LinkedIn: [Ahmed Alsiddig](https://www.linkedin.com/in/ahmed-alsiddig-6a0801287/)
 
-Screenshots and Markdown reports will be included where they help demonstrate the investigation process and results. Sensitive information, credentials, tokens, and unnecessary private network details will be removed or sanitized before publication.
+## 📜 License
 
-## Disclaimer
-
-This repository is intended for educational purposes and authorized security testing. Attack simulations must be performed only against systems for which authorization has been granted.
-
-BOTS v3 materials remain subject to their original licensing and usage terms.
-
-## Progress
-
-This is an ongoing project. New attack scenarios, detection queries, BOTS v3 investigations, and incident response exercises will be documented as they are completed.
+This repository is licensed under the [MIT License](./LICENSE).
