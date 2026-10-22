@@ -78,7 +78,7 @@ Each attack folder follows the same format:
 | 4 | DCSync Attack | T1003.006 | ⬜ Planned |
 | 5 | Golden Ticket | T1558.001 | ⬜ Planned |
 | 6 | LLMNR/NBT-NS Poisoning | T1557.001 | ⬜ Planned |
-| 7 | BloodHound Enumeration | T1087 / T1482 | ⬜ Planned |
+| 7 | BloodHound Enumeration | T1087 / T1482 | ✅ Complete |
 
 ## 🛠️ Tech Stack
 
