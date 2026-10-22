@@ -1,101 +1,96 @@
-# Splunk SOC Home Lab — Active Directory Attack Detection
+# Splunk SOC Home Lab — Active Directory Attack & Detection Engineering
 
-A home lab built to simulate real-world Active Directory attacks and detect them using Splunk. This repo documents the lab setup, each attack scenario executed against the domain, the raw telemetry generated, and the corresponding Splunk detections (SPL queries) mapped to MITRE ATT&CK.
+A home lab documenting common Active Directory attack techniques end-to-end: executed from a Kali
+attacker box, logged on a Windows Server domain controller, and detected in Splunk. Each phase
+pairs the attacker-side evidence with the matching Splunk detection, including the configuration
+needed to make Windows actually log the activity — several of these events are **not captured by
+default**.
 
-## 🎯 Goal
-
-Practice both offensive techniques (simulating common AD attacks) and defensive detection engineering (building and tuning Splunk searches/dashboards to catch them) — bridging SOC analyst and red team skill sets in one hands-on project.
-
-## 🏗️ Lab Architecture
+## Lab Architecture
 
 ```
-┌─────────────────────────────────────────────┐
-│  Attacker (Kali Linux)                       │
-│  - Impacket, Mimikatz, Responder, BloodHound │
-└───────────────────┬───────────────────────────┘
-                     │
-┌────────────────────┴───────────────────────────┐
-│  Windows Server (Domain Controller)             │
-│  - Active Directory Domain Services             │
-│  - Sysmon + Splunk Universal Forwarder           │
-└────────────────────┬───────────────────────────┘
-                     │
-┌────────────────────┴───────────────────────────┐
-│  Windows 10/11 Client (Domain-joined victim)    │
-│  - Sysmon + Splunk Universal Forwarder           │
-└────────────────────┬───────────────────────────┘
-                     │
-┌────────────────────┴───────────────────────────┐
-│  Splunk Enterprise (SOC server)                 │
-│  - Ingests logs, dashboards, detections (SPL)   │
-└─────────────────────────────────────────────────┘
+ Linux (Kali)                 Windows Server                 Splunk Enterprise
+ ───────────────       attacks       ─────────────       logs to      ─────────────
+ Attacker box     ───────────────▶   Domain Controller  ───────────▶  SIEM / Detection
+ Impacket, CME,                      (AD DS)                          Engineering
+ BloodHound,                         Universal Forwarder
+ Responder, Kerbrute                 installed
 ```
 
-## 🧱 Lab Components
-
-| Component | Role | Key Tools |
+| Role | Host | Notes |
 |---|---|---|
-| Windows Server 2019/2022 | Domain Controller | Active Directory Domain Services, Sysmon |
-| Windows 10/11 | Domain-joined client | Sysmon, Splunk Universal Forwarder |
-| Kali Linux | Attacker machine | Impacket, Mimikatz, Responder, BloodHound |
-| Splunk Enterprise | SOC / log analysis | Splunk Free/Dev license (500MB/day) |
+| Domain Controller | `WIN-11AN9QVN6Q3` | Windows Server, AD DS |
+| Attacker | Kali Linux | Impacket, CrackMapExec, BloodHound, Responder, Kerbrute, enum4linux |
+| SIEM | Splunk Enterprise | Universal Forwarder on the DC forwards Security, System, Application, and Directory Service logs |
 
-## 📁 Repository Structure
+> **Note:** All domain names, usernames, and passwords in this repo (`exbugz0d.org`, `ahmed`,
+> `Ahmedalsiddig123`, etc.) belong to an isolated lab environment and are not real credentials.
+
+## Phase Status
+
+| Phase | Technique Area | Status |
+|---|---|---|
+| 1 | Password Brute Forcing | 🚧 In Progress |
+| 2 | [Reconnaissance & Enumeration](./phase2-recon-enumeration/) | ✅ Complete |
+| 3 | Credential Access | 📋 Planned |
+| 4 | Lateral Movement | 📋 Planned |
+| 5 | Privilege Escalation & Domain Dominance | 📋 Planned |
+| 6 | Persistence | 📋 Planned |
+
+**Status legend**
+- 📋 **Planned** — not started yet
+- 🚧 **In Progress** — attack run, but detection not yet fully verified/matched in Splunk, or writeup incomplete
+- ✅ **Complete** — attack run, detection verified end-to-end in Splunk, README + screenshots written
+
+## Repo Structure
 
 ```
-splunk-soc-ad-homelab/
-├── README.md
-├── lab-setup/
-│   ├── 01-network-topology.md
-│   ├── 02-domain-controller-setup.md
-│   ├── 03-client-setup.md
-│   ├── 04-splunk-install-config.md
-│   └── 05-sysmon-config.md
-├── attacks/
-│   ├── 01-kerberoasting/
-│   ├── 02-pass-the-hash/
-│   ├── 03-asrep-roasting/
-│   ├── 04-dcsync/
-│   ├── 05-golden-ticket/
-│   ├── 06-llmnr-poisoning/
-│   └── 07-bloodhound-enum/
-├── detections/
-│   └── splunk-detection-rules.md
-└── dashboards/
-    └── soc-overview-dashboard.json
+splunk-soc-home-lab/
+├── README.md                          (this file)
+├── phase1-bruteforce/
+│   └── README.md
+├── phase2-recon-enumeration/
+│   ├── README.md
+│   └── screenshots/
+├── phase3-credential-access/
+├── phase4-lateral-movement/
+├── phase5-privilege-escalation/
+└── phase6-persistence/
 ```
 
-Each attack folder follows the same format:
-**Objective → Attack Steps → Raw Log Sample → Detection Logic (SPL) → Dashboard/Alert Screenshot → MITRE ATT&CK Mapping**
+Each phase folder follows the same format:
+- **Objective** — what the technique does and why it matters
+- **Command** — exact commands run from the attacker box
+- **Evidence** — attacker-side terminal screenshot
+- **Detection Setup** — what Windows/Splunk config was needed, since several of these events are
+  not logged by default
+- **Detecting It** — the SPL query and matching Splunk screenshot
+- **False Positives** — what legitimate activity could look similar
 
-## 🗺️ Attack Scenarios Covered
+## Key Findings So Far
 
-| # | Attack | MITRE ATT&CK | Status |
-|---|---|---|---|
-| 1 | Kerberoasting | T1558.003 | ⬜ Planned |
-| 2 | Pass-the-Hash | T1550.002 | ⬜ Planned |
-| 3 | AS-REP Roasting | T1558.004 | ⬜ Planned |
-| 4 | DCSync Attack | T1003.006 | ⬜ Planned |
-| 5 | Golden Ticket | T1558.001 | ⬜ Planned |
-| 6 | LLMNR/NBT-NS Poisoning | T1557.001 | ⬜ Planned |
-| 7 | BloodHound Enumeration | T1087 / T1482 | ✅ Complete |
+- **LDAP and SMB share-access auditing are both off by default** on a fresh Domain Controller —
+  enumeration via `ldapsearch`, `enum4linux`, or BloodHound leaves no trace in Splunk unless
+  Directory Service diagnostics (Event ID 1644/2889) and Advanced Audit Policy (Event ID 5140/5145)
+  are explicitly enabled.
+- Kerberos-dependent tooling (BloodHound, Kerberoasting) silently falls back to NTLM if the
+  attacker box's DNS isn't pointed at the DC — easy to miss, worth checking early.
+- Pairing an attacker-side screenshot with the **matching** Splunk event (same source IP, account,
+  and timeframe) is far more convincing evidence than either one shown alone — confirmed this the
+  hard way in Phase 1, where an initial "success" screenshot turned out to be a different account
+  than the one actually cracked.
 
-## 🛠️ Tech Stack
+## Tooling Used
 
-- **Hypervisor:** VMware Workstation / VirtualBox / Proxmox
-- **SIEM:** Splunk Enterprise (Free/Dev license)
-- **Telemetry:** Sysmon + Windows Event Logs + Splunk Universal Forwarder
-- **Attack Tooling:** Impacket, Mimikatz, Responder, BloodHound, Hashcat
+| Category | Tools |
+|---|---|
+| Enumeration | `ldapsearch`, `enum4linux`, `crackmapexec`, `bloodhound-python` |
+| Brute Forcing | CrackMapExec, Hydra, Kerbrute |
+| Credential Access | Impacket (`GetUserSPNs`, `GetNPUsers`, `secretsdump`), Responder, hashcat |
+| Lateral Movement | Impacket (`psexec`, `wmiexec`), Mimikatz |
+| Detection | Splunk Enterprise, Splunk Universal Forwarder, Windows Advanced Audit Policy |
 
-## ⚠️ Disclaimer
+---
 
-All attacks and techniques documented in this repository were performed exclusively in an **isolated, self-owned home lab environment**. Nothing here was run against any system without explicit authorization. This repo is for educational and defensive security research purposes only.
-
-## 🔎 About
-
-- GitHub: [@a7meda1s1dd1g](https://github.com/a7meda1s1dd1g)
-- LinkedIn: [Ahmed Alsiddig](https://www.linkedin.com/in/ahmed-alsiddig-6a0801287/)
-
-## 📜 License
-
-This repository is licensed under the [MIT License](./LICENSE).
+*This lab is built for defensive detection engineering practice in an isolated environment.
+Educational / authorized-testing use only.*
