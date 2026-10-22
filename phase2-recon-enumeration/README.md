@@ -77,7 +77,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\NTDS\Diagnostics" /v "16 LDAP In
 disabled = 0
 ```
 ![Detection Setup Registry](screenshots/07-detection-setup-registry.png)
-![Detection Setup Inputs Conf](screenshots/09-detection-setup-inputs-conf.png)
+![Detection Setup Inputs Conf](screenshots/9-detection-setup-inputs-conf.png)
 
 #### Detecting It — Event ID 1644
 ```spl
