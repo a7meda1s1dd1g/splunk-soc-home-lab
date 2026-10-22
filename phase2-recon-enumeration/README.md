@@ -32,7 +32,7 @@ ldapsearch -x -H ldap://<dc-ip> -D "ahmed@<domain>" -w '<password>' \
 This dumps the full LDAP tree — OUs, Domain Controllers, user objects, trust containers — with no
 special privileges beyond a valid domain credential.
 
-📸 `screenshots/01-ldapsearch-user-dump.png`
+![Ldapsearch User Dump](screenshots/01-ldapsearch-user-dump.png)
 
 ### Why this matters
 Windows does **not** log LDAP search filters by default. An attacker can run broad queries like
@@ -49,15 +49,15 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\NTDS\Diagnostics" /v "16 LDAP In
 [WinEventLog://Directory Service]
 disabled = 0
 ```
-📸 `screenshots/07-detection-setup-registry.png`
-📸 `screenshots/09-detection-setup-inputs-conf.png`
+![Detection Setup Registry](screenshots/07-detection-setup-registry.png)
+![Detection Setup Inputs Conf](screenshots/09-detection-setup-inputs-conf.png)
 
 ### Detecting it — Event ID 1644 (search filter + client IP)
 ```spl
 index=wineventlog source="Directory Service" EventCode=1644
 | table _time, Client_IP, Filter, Duration, Entries_Returned
 ```
-📸 `screenshots/02-splunk-1644-ldap-filter.png`
+![Splunk 1644 Ldap Filter](screenshots/02-splunk-1644-ldap-filter.png)
 
 ### Bonus detection — Event ID 2889 (unsigned / cleartext bind)
 Catches the client's identity even when the search filter itself looks benign — `ldapsearch` and
@@ -68,7 +68,7 @@ index=wineventlog source="WinEventLog:Directory Service" EventCode=2889
 | rex field=Message "Identity.*:\s+(?<user>[^\r\n]+)"
 | table _time, host, client_ip, user, Message
 ```
-📸 `screenshots/06-splunk-2889-ldap-bind.png`
+![Splunk 2889 Ldap Bind](screenshots/06-splunk-2889-ldap-bind.png)
 
 ### False positives
 Legitimate admin tools (ADUC, the PowerShell AD module) generate similar LDAP queries. Baseline
@@ -86,7 +86,7 @@ bloodhound-python -u ahmed -p '<password>' -d <domain> -ns <dc-ip> -c All
 Collects users, groups, GPOs, OUs, containers, and trust relationships for offline attack-path
 analysis in the BloodHound GUI.
 
-📸 `screenshots/05-bloodhound-collection-terminal.png`
+![Bloodhound Collection Terminal](screenshots/05-bloodhound-collection-terminal.png)
 
 ### Troubleshooting note
 Hit this warning during collection:
@@ -116,7 +116,7 @@ smbclient -L //<dc-ip>/ -N
 Confirms null sessions are allowed, pulls the domain name and SID, NetBIOS service info, and
 enumerates shares.
 
-📸 `screenshots/03-enum4linux-domain-sid.png`
+![Enum4linux Domain Sid](screenshots/03-enum4linux-domain-sid.png)
 
 ### Why this matters
 `4624` (Logon Type 3) logs by default, but `5140` (share accessed) and `5145` (detailed share
@@ -128,7 +128,7 @@ access check) — the events that actually show **which share** was touched — 
 auditpol /set /subcategory:"File Share" /success:enable /failure:enable
 auditpol /set /subcategory:"Detailed File Share" /success:enable /failure:enable
 ```
-📸 `screenshots/08-detection-setup-auditpol.png`
+![Detection Setup Auditpol](screenshots/08-detection-setup-auditpol.png)
 
 These land in the regular Security log — no extra `inputs.conf` stanza needed if Security is
 already forwarded.
@@ -138,7 +138,7 @@ already forwarded.
 index=wineventlog EventCode=5140 OR EventCode=5145
 | table _time, Account_Name, Share_Name, Source_Address
 ```
-📸 `screenshots/04-splunk-5140-anonymous-logon.png`
+![Splunk 5140 Anonymous Logon](screenshots/04-splunk-5140-anonymous-logon.png)
 
 In the lab run, this surfaced 29 events of `ANONYMOUS LOGON` repeatedly accessing `\\*\IPC$` from
 the attacker's IP — a clean signature of null-session enumeration tooling.
