@@ -52,10 +52,10 @@ Each phase folder follows the same format:
 
 | # | Phase | Techniques | MITRE ATT&CK | Status |
 |---|---|---|---|---|
-| 1 | Password Brute Forcing | SMB / RDP / Kerberos brute force | T1110.001 / T1110.003 | 🟧 In Progress |
+| 1 | Password Brute Forcing | SMB / RDP / Kerberos brute force | T1110.001 / T1110.003 | ✅ Complete |
 | 2 | Reconnaissance & Enumeration | LDAP Enumeration, SMB/Null Session Enumeration, BloodHound Collection | T1087.002 / T1482 / T1135 / T1046 | ✅ Complete |
-| 3 | Credential Access | Kerberoasting, AS-REP Roasting, Password Spraying | T1558.003 / T1558.004 / T1110.003 | ⬜ Planned |
-| 4 | Lateral Movement | Pass-the-Hash, Overpass-the-Hash / Pass-the-Ticket | T1550.002 / T1550.003 | ⬜ Planned |
+| 3 | Credential Access | Kerberoasting, AS-REP Roasting, Password Spraying | T1558.003 / T1558.004 / T1110.003 | ✅ Complete |
+| 4 | Lateral Movement | Pass-the-Hash, Overpass-the-Hash / Pass-the-Ticket | T1550.002 / T1550.003 | 🟧 In Progress |
 | 5 | Privilege Escalation & Domain Dominance | DCSync, Golden/Silver Ticket, Delegation Abuse | T1003.006 / T1558.001 / T1558.002 | ⬜ Planned |
 | 6 | Persistence | Skeleton Key, AdminSDHolder Abuse, DCShadow | T1556.001 / T1098 / T1207 | ⬜ Planned |
 
