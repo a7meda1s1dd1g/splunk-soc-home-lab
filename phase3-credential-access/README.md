@@ -39,7 +39,7 @@ An attacker listening on the same network can **respond to these broadcasts** (p
 
 The victim machine (`EXBUGZ0D\Administrator`) attempts to access a non-existent UNC path: `\\thisdoesnotexist\share`. DNS cannot resolve this hostname, so Windows falls back to LLMNR/NBT-NS broadcast.
 
-> 📸 **Screenshot:** `screenshots/1-Share.png`
+![Responder_Attack](screenshots/1- Share.png)
 
 ```
 C:\Users\Administrator>\\thisdoesnotexist\share
